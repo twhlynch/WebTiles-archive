@@ -1,0 +1,25 @@
+body {
+	background-color: #050505;
+	margin: 0;
+	color: #fff;
+}
+.idnex {
+	background-image: url('/idnex.webp');
+	background-repeat: no-repeat;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-40%, -20%);
+}
+canvas {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+span {
+	position: fixed;
+	bottom: 10px;
+	left: 10px;
+}
