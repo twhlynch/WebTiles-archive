@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>WebTiles archive</title>
+		<style>
+			iframe {
+				width: 250px;
+				height: 250px;
+				overflow: hidden;
+				contain: strict;
+				position: relative;
+				border: none;
+				outline: 1px solid rgba(0, 0, 0, 0.06);
+				box-sizing: border-box;
+				user-select: none;
+				background-color: white;
+				-webkit-font-smoothing: none;
+				font-family: Tahoma, sans-serif;
+				font-size: 14px;
+			}
+			body {
+				margin: 0;
+			}
+			.wrapper {
+				position: relative;
+				display: inline-block;
+			}
+			.overlay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 10;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper" data-src="cube">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="gballs">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="gol">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="home">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="solitaire">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="tictactoe">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="troll">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+		<div class="wrapper" data-src="webtiles">
+			<iframe></iframe>
+			<div class="overlay"></div>
+		</div>
+	</body>
+	<script>
+		const css = `
+			html, body {
+				width: 250px;
+				height: 250px;
+				margin: 0;
+				-webkit-font-smoothing: none;
+				font-family: Tahoma, sans-serif;
+				font-size: 14px;
+			}
+		`;
+
+		document.querySelectorAll('.wrapper').forEach(async (wrapper) => {
+			const iframe = wrapper.querySelector('iframe');
+			const overlay = wrapper.querySelector('.overlay');
+			const src = wrapper.dataset.src;
+
+			let scripts = [];
+
+			// fetch html
+			const res = await fetch(`./${src}/index.html`);
+			const html = await res.text();
+
+			// parse html
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+
+			// edit urls
+			const base = `./${src}`;
+			doc.querySelectorAll('[src]').forEach((el) => {
+				const original = el.getAttribute('src');
+				if (!original.startsWith('http')) {
+					const slash = original.startsWith('/') ? '' : '/';
+					el.src = base + slash + original;
+				}
+			});
+			doc.querySelectorAll('[href]').forEach((el) => {
+				const original = el.getAttribute('href');
+				if (!original.startsWith('http')) {
+					const slash = original.startsWith('/') ? '' : '/';
+					el.href = base + slash + original;
+				}
+			});
+
+			// remove scripts
+			scripts = Array.from(doc.querySelectorAll('script')).map((s) => ({
+				type: s.type,
+				src: s.src,
+				content: s.textContent,
+			}));
+			doc.querySelectorAll('script').forEach((s) => s.remove());
+
+			// inject css
+			const style = doc.createElement('style');
+			style.textContent = css;
+			doc.head.appendChild(style);
+
+			// write to iframe
+			iframe.contentDocument.open();
+			iframe.contentDocument.write(doc.documentElement.outerHTML);
+			iframe.contentDocument.close();
+
+			// start on click
+			overlay.addEventListener('click', () => {
+				overlay.remove();
+
+				// add scripts
+				const doc = iframe.contentDocument;
+				scripts.forEach((s) => {
+					const script = doc.createElement('script');
+					if (s.type) script.type = s.type;
+					if (s.src) script.src = s.src;
+					if (s.content) script.textContent = s.content;
+					doc.head.appendChild(script);
+				});
+			});
+		});
+	</script>
+</html>
